@@ -12,7 +12,7 @@ import {
   winChance,
 } from "@/lib/hilo";
 
-const START_BALANCE = 1000;
+const START_BALANCE = 5000;
 
 type Status = "idle" | "playing" | "lost" | "cashed";
 
@@ -117,7 +117,9 @@ function Game() {
         <h1>hi·lo</h1>
         <div className="balance">
           <span>balans</span>
-          <strong>{state.balance.toFixed(2)}</strong>
+          <strong key={state.balance} className="bump">
+            {state.balance.toFixed(2)}
+          </strong>
         </div>
       </header>
 

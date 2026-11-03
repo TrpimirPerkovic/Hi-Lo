@@ -17,12 +17,27 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: radial-gradient(ellipse at top, #2c2833 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--text);
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 
-button { font: inherit; cursor: pointer; }
+/* Lo-fi scanlines preko cijelog ekrana */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+button:not(:disabled):hover { transform: translateY(-2px); }
+button:not(:disabled):active { transform: translateY(0) scale(0.98); }
 button:disabled { cursor: not-allowed; opacity: 0.35; }
 
 .game {
@@ -42,6 +57,8 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 .balance strong { font-size: 20px; }
 
 .table {
+  position: relative;
+  overflow: hidden;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -64,12 +81,45 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 20px;
   line-height: 1.1;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
 }
-.card.big { width: 110px; height: 154px; font-size: 38px; border-radius: 10px; }
 .card.red { color: var(--card-red); }
+
+/* Velika karta: kutni indeksi + simbol u sredini + "špil" iza nje */
+.card.big {
+  position: relative;
+  width: 120px;
+  height: 168px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #f8f2e7, var(--card) 60%, #e6dccb);
+  box-shadow:
+    3px 3px 0 #d6ccbb,
+    6px 6px 0 #b9af9f,
+    0 14px 24px rgba(0, 0, 0, 0.45);
+}
+.card.big .pip { font-size: 56px; }
+.card.big .corner {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+.card.big .tl { top: 8px; left: 9px; }
+.card.big .br { bottom: 8px; right: 9px; transform: rotate(180deg); }
+
+.deal { position: relative; z-index: 1; animation: deal 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+.deal.shake { animation: deal 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.2) both, shake 0.4s 0.3s ease-in-out; }
+
+.flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: flash 0.7s ease-out forwards;
+}
+.flash.won { background: radial-gradient(circle at 30% 50%, rgba(143, 191, 154, 0.35), transparent 65%); }
+.flash.lost { background: radial-gradient(circle at 30% 50%, rgba(217, 140, 140, 0.35), transparent 65%); }
 
 .guesses { display: flex; flex-direction: column; gap: 10px; min-width: 190px; }
 
@@ -85,7 +135,7 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   border: 1px solid var(--line);
   border-radius: 8px;
 }
-.guess:not(:disabled):hover { border-color: var(--accent); }
+.guess:not(:disabled):hover { border-color: var(--accent); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); }
 .guess .arrow { grid-row: span 2; align-self: center; color: var(--accent); }
 .guess small { color: var(--muted); }
 
@@ -99,13 +149,19 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 }
 .stat strong { font-size: 18px; }
 
-.status { margin: 0; text-align: center; color: var(--muted); min-height: 1.4em; }
+.status { margin: 0; text-align: center; color: var(--muted); min-height: 1.4em; animation: fade-up 0.3s ease-out; }
 .status.lost { color: var(--bad); }
-.status.cashed { color: var(--good); }
+.status.cashed { color: var(--good); font-weight: 700; animation: pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4); }
+
+/* Brojevi kratko "skoče" kad se promijene */
+.bump { display: inline-block; animation: bump 0.35s ease-out; }
+.stat .bump { transform-origin: left center; }
+.balance .bump { transform-origin: right center; }
 
 .controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .controls button { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--line); }
 .primary { background: var(--accent); color: var(--bg); border-color: var(--accent) !important; font-weight: 700; }
+.primary.ready { animation: glow 1.6s ease-in-out infinite; }
 .secondary { background: transparent; color: var(--text); }
 
 .bet { display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -127,7 +183,58 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   padding: 4px;
   border-radius: 8px;
   border: 1px solid transparent;
+  animation: chip-in 0.3s ease-out both;
 }
 .chip.won { border-color: var(--good); }
 .chip.lost { border-color: var(--bad); }
 .chip-guess { font-size: 10px; color: var(--muted); }
+
+/* ---------- Animacije ---------- */
+
+@keyframes deal {
+  from { opacity: 0; transform: perspective(700px) rotateY(85deg) translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px) rotate(-2deg); }
+  40% { transform: translateX(8px) rotate(2deg); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+@keyframes flash {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes bump {
+  0%   { transform: scale(1.25); color: var(--accent); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pop {
+  0%   { opacity: 0; transform: scale(0.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes chip-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(230, 185, 128, 0); }
+  50%      { box-shadow: 0 0 18px rgba(230, 185, 128, 0.55); }
+}
+
+/* Poštuj korisnike koji su u sustavu isključili animacije */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
