@@ -38,6 +38,10 @@ export function isCorrect(current: Card, next: Card, guess: Guess): boolean {
   else return guess==='higher' ? next.rank >= current.rank : next.rank <= current.rank;
 }
 
+export function cashoutAmount(bet: number, multiplier: number): number {
+  return Math.round(bet * multiplier * RTP * 100) / 100;
+}
+
 export function isRed(card: Card): boolean {
   return card.suit === "♥" || card.suit === "♦";
 }

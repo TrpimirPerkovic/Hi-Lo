@@ -6,6 +6,7 @@ import {
   Guess,
   RANK_LABELS,
   drawCard,
+  cashoutAmount,
   guessMultiplier,
   isCorrect,
   isRed,
@@ -84,7 +85,7 @@ function reducer(state: State, action: Action): State {
     }
     case "cashout": {
       if (state.status !== "playing" || state.multiplier <= 1) return state;
-      const payout = Math.floor(state.bet * state.multiplier * 100) / 100;
+      const payout = cashoutAmount(state.bet, state.multiplier);
       return { ...state, balance: state.balance + payout, status: "cashed", lastPayout: payout };
     }
     case "reset":
