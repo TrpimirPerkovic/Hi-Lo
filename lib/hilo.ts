@@ -20,7 +20,7 @@ export function drawCard(): Card {
 // "Viša ili ista" / "Niža ili ista"
 
 export function isStrict(rank: number, guess: Guess): boolean{
-  return (guess==='higher' || (guess==="lower" && rank===1)) || (guess==='lower' || (guess==="higher" && rank===13)) //ako je rank = A ili rank = K
+  return (guess === "higher" && rank === 1) || (guess === 'lower' && rank === 13); //ako je rank = A ili rank = K
 }
 
 export function winChance(rank: number, guess: Guess): number {

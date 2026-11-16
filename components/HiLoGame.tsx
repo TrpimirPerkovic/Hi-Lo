@@ -129,7 +129,7 @@ function Game() {
 
         <div className="guesses">
           <GuessButton
-            label={rank === 13 ? "Ista (K)" : rank === 1 ? "Viša" : "Viša ili ista"}
+            label={rank === 13 ? "Ista (A)" : rank === 1 ? "Viša" : "Viša ili ista"}
             arrow="▲"
             chance={winChance(rank, "higher")}
             multiplier={guessMultiplier(rank, "higher")}
