@@ -2,7 +2,7 @@
 // Logika
 export const SUITS = ["♠", "♥", "♦", "♣"] as const;
 export const RANK_LABELS = [ "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-const RTP = 0.99;
+
 
 export type Suit = (typeof SUITS)[number];
 export type Card = { rank: number; suit: Suit }; // rank: 1 (2) .. 13 (A)
@@ -17,6 +17,28 @@ export function cryptoRandom(){
   return cryptoNumber;
 }
 
+export type StreakTier = "warm" | "hot" | "legend";
+
+export function tierStreak(streak: number): StreakTier | null {
+  if (streak >= 10) return "legend";
+  if (streak >= 5) return "hot";
+  if (streak >= 3) return "warm";
+  return null;
+}
+
+
+export function rtpForStreak(streak: number): number {
+  const tier = tierStreak(streak);
+  if (tier === "legend") return 0.99;
+  if (tier === "hot") return 0.98;
+  return 0.97;
+}
+
+
+// Broj pogodaka u rundi. Promašaj završava rundu, pa je to ujedno i streak.
+export function countWins(history: { won?: boolean }[]): number {
+  return history.filter((h) => h.won).length;
+}
 
 // "Beskonačni špil": svaka karta je neovisna, pa su vjerojatnosti uvijek točne.
 export function drawCard(): Card {
@@ -48,8 +70,8 @@ export function isCorrect(current: Card, next: Card, guess: Guess): boolean {
   else return guess==='higher' ? next.rank >= current.rank : next.rank <= current.rank;
 }
 
-export function cashoutAmount(bet: number, multiplier: number): number {
-  return Math.round(bet * multiplier * RTP * 100) / 100;
+export function cashoutAmount(bet: number, multiplier: number, streak: number): number {
+  return Math.round(bet * multiplier * rtpForStreak(streak) * 100) / 100;
 }
 
 export function isRed(card: Card): boolean {

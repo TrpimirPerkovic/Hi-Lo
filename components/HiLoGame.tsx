@@ -7,9 +7,12 @@ import {
   RANK_LABELS,
   drawCard,
   cashoutAmount,
+  countWins,
   guessMultiplier,
   isCorrect,
   isRed,
+  rtpForStreak,
+  tierStreak,
   winChance,
 } from "@/lib/hilo";
 
@@ -78,7 +81,7 @@ function reducer(state: State, action: Action): State {
     }
     case "cashout": {
       if (state.status !== "playing" || state.multiplier <= 1) return state;
-      const payout = cashoutAmount(state.bet, state.multiplier);
+      const payout = cashoutAmount(state.bet, state.multiplier, countWins(state.history));
       return { ...state, balance: state.balance + payout, status: "cashed", lastPayout: payout };
     }
     case "reset":
@@ -94,14 +97,6 @@ export default function HiLoGame() {
 }
 
 
-function tierStreak(streak: number): "warm" | "hot" | "legend" | null {
-  if (streak >= 10) return "legend";
-  if (streak >= 5) return "hot";
-  if (streak >= 3) return "warm";
-  return null;
-}
-
-
 function Game() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const [betInput, setBetInput] = useState("10");
@@ -110,9 +105,11 @@ function Game() {
   const rank = state.current.rank;
   const bet = Number(betInput);
   const betValid = Number.isFinite(bet) && bet > 0 && bet <= state.balance;
-  const correctGuesses = state.history.filter((h) => h.won).length;
+  const correctGuesses = countWins(state.history);
   const tier = playing ? tierStreak(correctGuesses):null;
-  const potentialPayout = state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier): state.bet
+  const rtpPercent = Math.round(rtpForStreak(correctGuesses) * 100);
+  const potentialPayout =
+    state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier, correctGuesses) : state.bet;
 
 
   return (
@@ -151,7 +148,10 @@ function Game() {
       </section>
 
       {tier && (
-      <div className={`streak ${tier}`}>🔥 {correctGuesses} u nizu</div>
+      <div className={`streak ${tier}`}>
+        🔥 {correctGuesses} u nizu
+        {tier !== "warm" && ` · RTP ${rtpPercent} %`}
+      </div>
       )}
 
       <section className="stats">
