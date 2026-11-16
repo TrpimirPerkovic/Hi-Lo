@@ -137,7 +137,7 @@ function Game() {
             onClick={() => dispatch({ type: "guess", guess: "higher" })}
           />
           <GuessButton
-            label={rank === 1 ? "Ista (A)" : rank === 13 ? "Niža" : "Niža ili ista"}
+            label={rank === 1 ? "Ista (2)" : rank === 13 ? "Niža" : "Niža ili ista"}
             arrow="▼"
             chance={winChance(rank, "lower")}
             multiplier={guessMultiplier(rank, "lower")}
