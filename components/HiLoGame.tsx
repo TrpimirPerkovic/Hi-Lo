@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useSyncExternalStore, useReducer, useState } from "react";
 import {
   Card,
   Guess,
@@ -30,7 +30,6 @@ type State = {
 type Action =
   | { type: "start"; bet: number }
   | { type: "guess"; guess: Guess }
-  | { type: "skip" }
   | { type: "cashout" }
   | { type: "reset" };
 
@@ -77,12 +76,6 @@ function reducer(state: State, action: Action): State {
         multiplier: state.multiplier * guessMultiplier(state.current.rank, action.guess),
       };
     }
-    case "skip": {
-      // Preskakanje ne mijenja multiplier — korisno kod karata poput 7.
-      if (state.status !== "playing") return state;
-      const next = drawCard();
-      return { ...state, current: next, history: [...state.history, { card: next }] };
-    }
     case "cashout": {
       if (state.status !== "playing" || state.multiplier <= 1) return state;
       const payout = cashoutAmount(state.bet, state.multiplier);
@@ -96,10 +89,18 @@ function reducer(state: State, action: Action): State {
 // Prva karta je nasumična, pa igru renderiramo tek na klijentu —
 // inače bi server i browser izvukli različite karte (hydration mismatch).
 export default function HiLoGame() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted ? <Game /> : null;
+  const isClient = useSyncExternalStore(() => () => {}, () => true, () => false)
+  return isClient ? <Game /> : null;
 }
+
+
+function tierStreak(streak: number): "warm" | "hot" | "legend" | null {
+  if (streak >= 10) return "legend";
+  if (streak >= 5) return "hot";
+  if (streak >= 3) return "warm";
+  return null;
+}
+
 
 function Game() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
@@ -110,7 +111,9 @@ function Game() {
   const bet = Number(betInput);
   const betValid = Number.isFinite(bet) && bet > 0 && bet <= state.balance;
   const correctGuesses = state.history.filter((h) => h.won).length;
-  const potentialPayout = state.bet * state.multiplier;
+  const tier = playing ? tierStreak(correctGuesses):null;
+  const potentialPayout = state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier): state.bet
+
 
   return (
     <main className="game">
@@ -146,6 +149,10 @@ function Game() {
           />
         </div>
       </section>
+
+      {tier && (
+      <div className={`streak ${tier}`}>🔥 {correctGuesses} u nizu</div>
+      )}
 
       <section className="stats">
         <Stat label="multiplier" value={`${state.multiplier.toFixed(2)}×`} />

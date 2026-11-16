@@ -1,26 +1,35 @@
+
 // Logika
 export const SUITS = ["♠", "♥", "♦", "♣"] as const;
 export const RANK_LABELS = [ "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-
-//House edge: 1% (isplata = 0.97 / vjerojatnost)
 const RTP = 0.99;
 
 export type Suit = (typeof SUITS)[number];
-export type Card = { rank: number; suit: Suit }; // rank: 1 (2) .. 13 (K)
+export type Card = { rank: number; suit: Suit }; // rank: 1 (2) .. 13 (A)
 export type Guess = "higher" | "lower";
+
+
+// crypto random vrijednosti
+export function cryptoRandom(){
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  const cryptoNumber = buf[0] / (2**32)
+  return cryptoNumber;
+}
+
 
 // "Beskonačni špil": svaka karta je neovisna, pa su vjerojatnosti uvijek točne.
 export function drawCard(): Card {
   return {
-    rank: Math.floor(Math.random() * 13) + 1,
-    suit: SUITS[Math.floor(Math.random() * 4)],
+    rank: Math.floor(cryptoRandom() * 13) + 1,
+    suit: SUITS[Math.floor(cryptoRandom() * 4)],
   };
 }
 
 // "Viša ili ista" / "Niža ili ista"
 
 export function isStrict(rank: number, guess: Guess): boolean{
-  return (guess === "higher" && rank === 1) || (guess === 'lower' && rank === 13); //ako je rank = A ili rank = K
+  return (guess === "higher" && rank === 1) || (guess === 'lower' && rank === 13); //ako je rank = 2 ili rank = A
 }
 
 export function winChance(rank: number, guess: Guess): number {
@@ -29,7 +38,7 @@ export function winChance(rank: number, guess: Guess): number {
 }
 
 export function guessMultiplier(rank: number, guess: Guess): number {
-  return RTP / winChance(rank, guess);
+  return 1 / winChance(rank, guess);
 }
 
 export function isCorrect(current: Card, next: Card, guess: Guess): boolean {

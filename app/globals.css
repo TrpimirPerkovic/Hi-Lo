@@ -238,3 +238,31 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.streak {
+  align-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--accent);
+  animation: streak-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4);
+}
+.streak.legend { background: linear-gradient(90deg, #e6b980, #d98c8c, #e6b980); }
+
+.table { transition: box-shadow 0.4s ease, border-color 0.4s ease; }
+.table.streak-hot { border-color: var(--accent); box-shadow: 0 0 24px rgba(230, 185, 128, 0.25); }
+.table.streak-legend {
+  border-color: var(--accent);
+  animation: streak-glow 1.4s ease-in-out infinite;
+}
+
+@keyframes streak-pop {
+  0%   { opacity: 0; transform: scale(0.5) rotate(-6deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes streak-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(230, 185, 128, 0.2); }
+  50%      { box-shadow: 0 0 40px rgba(230, 185, 128, 0.55); }
+}
