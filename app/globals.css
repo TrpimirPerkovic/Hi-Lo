@@ -1,15 +1,28 @@
 :root {
-  --bg: #1d1b22;
-  --panel: #27242e;
-  --line: #3a3642;
-  --text: #e8e2d6;
-  --muted: #8d8697;
-  --accent: #e6b980;
-  --good: #8fbf9a;
-  --bad: #d98c8c;
-  --card: #f3ece0;
-  --card-red: #b5544e;
-  --card-black: #2b2830;
+  /* Pozadine: tamna bordo/ljubičasta */
+  --bg: #140810;
+  --panel: #1f0d18;
+  --panel-2: #2a1222;
+  --line: #3b1830;
+  --text: #f7eef4;
+  --muted: #a58a9c;
+
+  /* Magenta naglasak + ljubičasti prijelaz */
+  --accent: #ec1f86;
+  --accent-2: #c86bf0;
+  --accent-glow: rgba(236, 31, 134, 0.35);
+
+  /* Zelena za glavnu akciju i dobitak */
+  --go: #56d37b;
+  --go-text: #0e2a17;
+  --go-glow: rgba(86, 211, 123, 0.55);
+
+  --good: #56d37b;
+  --bad: #ff4f7b;
+
+  --card: #f6eef6;
+  --card-red: #e0127a;
+  --card-black: #241020;
 }
 
 * { box-sizing: border-box; }
@@ -17,7 +30,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(ellipse at top, #2c2833 0%, var(--bg) 60%) fixed, var(--bg);
+  background: radial-gradient(ellipse at top, #2e0c22 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--text);
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
@@ -93,11 +106,11 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   width: 120px;
   height: 168px;
   border-radius: 10px;
-  background: linear-gradient(160deg, #f8f2e7, var(--card) 60%, #e6dccb);
+  background: linear-gradient(160deg, #fff8fd, var(--card) 60%, #e8d6ea);
   box-shadow:
-    3px 3px 0 #d6ccbb,
-    6px 6px 0 #b9af9f,
-    0 14px 24px rgba(0, 0, 0, 0.45);
+    3px 3px 0 #dcc6de,
+    6px 6px 0 #b89ab8,
+    0 14px 24px rgba(0, 0, 0, 0.55);
 }
 .card.big .pip { font-size: 56px; }
 .card.big .corner {
@@ -118,8 +131,8 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   pointer-events: none;
   animation: flash 0.7s ease-out forwards;
 }
-.flash.won { background: radial-gradient(circle at 30% 50%, rgba(143, 191, 154, 0.35), transparent 65%); }
-.flash.lost { background: radial-gradient(circle at 30% 50%, rgba(217, 140, 140, 0.35), transparent 65%); }
+.flash.won { background: radial-gradient(circle at 30% 50%, rgba(86, 211, 123, 0.3), transparent 65%); }
+.flash.lost { background: radial-gradient(circle at 30% 50%, rgba(255, 79, 123, 0.35), transparent 65%); }
 
 .guesses { display: flex; flex-direction: column; gap: 10px; min-width: 190px; }
 
@@ -130,12 +143,12 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   column-gap: 8px;
   text-align: left;
   padding: 10px 14px;
-  background: var(--bg);
+  background: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 8px;
 }
-.guess:not(:disabled):hover { border-color: var(--accent); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); }
+.guess:not(:disabled):hover { border-color: var(--accent); box-shadow: 0 6px 18px var(--accent-glow); }
 .guess .arrow { grid-row: span 2; align-self: center; color: var(--accent); }
 .guess small { color: var(--muted); }
 
@@ -160,7 +173,7 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 
 .controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .controls button { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--line); }
-.primary { background: var(--accent); color: var(--bg); border-color: var(--accent) !important; font-weight: 700; }
+.primary { background: var(--go); color: var(--go-text); border-color: var(--go) !important; font-weight: 700; }
 .primary.ready { animation: glow 1.6s ease-in-out infinite; }
 .secondary { background: transparent; color: var(--text); }
 
@@ -168,7 +181,7 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 .bet input {
   font: inherit;
   padding: 11px 12px;
-  background: var(--panel);
+  background: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -230,8 +243,8 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 0 rgba(230, 185, 128, 0); }
-  50%      { box-shadow: 0 0 18px rgba(230, 185, 128, 0.55); }
+  0%, 100% { box-shadow: 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 18px var(--go-glow); }
 }
 
 /* Poštuj korisnike koji su u sustavu isključili animacije */
@@ -245,14 +258,14 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--bg);
+  color: #fff;
   background: var(--accent);
   animation: streak-pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4);
 }
-.streak.legend { background: linear-gradient(90deg, #e6b980, #d98c8c, #e6b980); }
+.streak.legend { background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent)); }
 
 .table { transition: box-shadow 0.4s ease, border-color 0.4s ease; }
-.table.streak-hot { border-color: var(--accent); box-shadow: 0 0 24px rgba(230, 185, 128, 0.25); }
+.table.streak-hot { border-color: var(--accent); box-shadow: 0 0 24px var(--accent-glow); }
 .table.streak-legend {
   border-color: var(--accent);
   animation: streak-glow 1.4s ease-in-out infinite;
@@ -263,6 +276,6 @@ button:disabled { cursor: not-allowed; opacity: 0.35; }
   100% { opacity: 1; transform: none; }
 }
 @keyframes streak-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(230, 185, 128, 0.2); }
-  50%      { box-shadow: 0 0 40px rgba(230, 185, 128, 0.55); }
+  0%, 100% { box-shadow: 0 0 16px rgba(236, 31, 134, 0.2); }
+  50%      { box-shadow: 0 0 40px rgba(236, 31, 134, 0.6); }
 }
