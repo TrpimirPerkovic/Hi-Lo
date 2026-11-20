@@ -11,9 +11,11 @@ import {
   guessMultiplier,
   isCorrect,
   isRed,
-  rtpForStreak,
+  Suit,
+  drawSuit,
   tierStreak,
   winChance,
+  winMultiplier
 } from "@/lib/hilo";
 
 const START_BALANCE = 5000;
@@ -25,9 +27,10 @@ type State = {
   bet: number;
   status: Status;
   current: Card;
-  history: { card: Card; guess?: Guess; won?: boolean }[];
+  history: { card: Card; guess?: Guess; won?: boolean; lucky?: boolean }[];
   multiplier: number;
   lastPayout: number;
+  luckySuit: Suit,
 };
 
 type Action =
@@ -46,6 +49,7 @@ function initialState(): State {
     history: [{ card }],
     multiplier: 1,
     lastPayout: 0,
+    luckySuit: drawSuit()
   };
 }
 
@@ -62,13 +66,16 @@ function reducer(state: State, action: Action): State {
         history: [{ card: state.current }],
         multiplier: 1,
         lastPayout: 0,
+        luckySuit: drawSuit()
       };
     }
     case "guess": {
       if (state.status !== "playing") return state;
       const next = drawCard();
       const won = isCorrect(state.current, next, action.guess);
-      const history = [...state.history, { card: next, guess: action.guess, won }];
+      const lucky = won && next.suit === state.luckySuit;
+      const history = [...state.history, { card: next, guess: action.guess, won, lucky }];
+      
       if (!won) {
         return { ...state, current: next, history, status: "lost", multiplier: 0 };
       }
@@ -76,12 +83,12 @@ function reducer(state: State, action: Action): State {
         ...state,
         current: next,
         history,
-        multiplier: state.multiplier * guessMultiplier(state.current.rank, action.guess),
+        multiplier: state.multiplier * winMultiplier(state.current.rank, action.guess, next, state.luckySuit),
       };
     }
     case "cashout": {
       if (state.status !== "playing" || state.multiplier <= 1) return state;
-      const payout = cashoutAmount(state.bet, state.multiplier, countWins(state.history));
+      const payout = cashoutAmount(state.bet, state.multiplier);
       return { ...state, balance: state.balance + payout, status: "cashed", lastPayout: payout };
     }
     case "reset":
@@ -100,16 +107,15 @@ export default function HiLoGame() {
 function Game() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const [betInput, setBetInput] = useState("10");
-
   const playing = state.status === "playing";
   const rank = state.current.rank;
   const bet = Number(betInput);
   const betValid = Number.isFinite(bet) && bet > 0 && bet <= state.balance;
   const correctGuesses = countWins(state.history);
   const tier = playing ? tierStreak(correctGuesses):null;
-  const rtpPercent = Math.round(rtpForStreak(correctGuesses) * 100);
+  const rtpPercent = Math.round((correctGuesses) * 100);
   const potentialPayout =
-    state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier, correctGuesses) : state.bet;
+    state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier) : state.bet;
 
 
   return (

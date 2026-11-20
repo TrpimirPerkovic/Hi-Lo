@@ -2,6 +2,12 @@
 // Logika
 export const SUITS = ["♠", "♥", "♦", "♣"] as const;
 export const RANK_LABELS = [ "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+const RTP = 0.99;
+
+// Fiksni RTP, promjena multipliera prema pogotku "sretne boje" - šansa 1/4
+export const LUCKY_BONUS = 1.5; // bonus na sretnu boju - ne utječe na RTP, samo multiplier
+const LUCKY_CHANCE = 1 / SUITS.length; // šansa 1/4 za sretnu boju
+export const LUCKY_FAKTOR = 1 + (LUCKY_BONUS - 1) * LUCKY_CHANCE; // 1.125
 
 
 export type Suit = (typeof SUITS)[number];
@@ -27,24 +33,21 @@ export function tierStreak(streak: number): StreakTier | null {
 }
 
 
-export function rtpForStreak(streak: number): number {
-  const tier = tierStreak(streak);
-  if (tier === "legend") return 0.99;
-  if (tier === "hot") return 0.98;
-  return 0.97;
-}
-
 
 // Broj pogodaka u rundi. Promašaj završava rundu, pa je to ujedno i streak.
 export function countWins(history: { won?: boolean }[]): number {
   return history.filter((h) => h.won).length;
 }
 
+export function drawSuit(): Suit {
+  return SUITS[Math.floor(cryptoRandom() * SUITS.length)]
+}
+
 // "Beskonačni špil": svaka karta je neovisna, pa su vjerojatnosti uvijek točne.
 export function drawCard(): Card {
   return {
     rank: Math.floor(cryptoRandom() * 13) + 1,
-    suit: SUITS[Math.floor(cryptoRandom() * 4)],
+    suit: drawSuit(),
   };
 }
 
@@ -60,7 +63,12 @@ export function winChance(rank: number, guess: Guess): number {
 }
 
 export function guessMultiplier(rank: number, guess: Guess): number {
-  return 1 / winChance(rank, guess);
+  return 1 / (winChance(rank, guess) * LUCKY_FAKTOR);
+}
+
+export function winMultiplier(rank: number, guess: Guess, next: Card, LuckySuit: Suit): number {
+  const base = guessMultiplier(rank, guess)
+  return next.suit === LuckySuit ? base * LUCKY_BONUS : base; //ili 1.5 multiplier ili običan multiplier
 }
 
 export function isCorrect(current: Card, next: Card, guess: Guess): boolean {
@@ -70,8 +78,8 @@ export function isCorrect(current: Card, next: Card, guess: Guess): boolean {
   else return guess==='higher' ? next.rank >= current.rank : next.rank <= current.rank;
 }
 
-export function cashoutAmount(bet: number, multiplier: number, streak: number): number {
-  return Math.round(bet * multiplier * rtpForStreak(streak) * 100) / 100;
+export function cashoutAmount(bet: number, multiplier: number): number {
+  return Math.round(bet * multiplier * RTP * 100) / 100;
 }
 
 export function isRed(card: Card): boolean {

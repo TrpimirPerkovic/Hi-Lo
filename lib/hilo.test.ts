@@ -1,5 +1,7 @@
 import {describe, it, expect} from "vitest";
-import { cashoutAmount, rtpForStreak, tierStreak, winChance } from "./hilo";
+import { cashoutAmount, tierStreak, winChance, LUCKY_BONUS, LUCKY_FAKTOR, guessMultiplier, winMultiplier, Guess } from "./hilo";
+
+
 
 describe("winChance", () =>{
     it("7 -> viša ili ista je 7/13", () => {
@@ -18,27 +20,38 @@ describe("tierStreak", () => {
     });
 })
 
-describe("rtpForStreak", () => {
-    it("ljestvica: <5 je 97 %, 5–9 je 98 %, 10+ je 99 %", () => {
-        expect(rtpForStreak(0)).toBe(0.97);
-        expect(rtpForStreak(4)).toBe(0.97);
-        expect(rtpForStreak(5)).toBe(0.98);
-        expect(rtpForStreak(9)).toBe(0.98);
-        expect(rtpForStreak(10)).toBe(0.99);
-        expect(rtpForStreak(50)).toBe(0.99);
-    });
 
-    it("nikad ne prelazi 99 % (igra ne smije gubiti novac)", () => {
-        for (let streak = 0; streak <= 100; streak++) {
-            expect(rtpForStreak(streak)).toBeLessThanOrEqual(0.99);
+
+describe("sretna boja", () => {
+    it("LUCKY_FAKTOR je 1.125", () => {
+        expect(LUCKY_FAKTOR).toBeCloseTo(1.125) // približno 1.125, a ne striktno
+    })
+    it("svaki potez je fer: očekivana vrijednost = 1", () => {
+        for(let rank = 1; rank<=13; rank++){
+            //Izračun ev vrijednosti da je približno 1
+            for(const guess of ['higher', 'lower'] as const){
+                const base = guessMultiplier(rank, guess)
+                const ev = winChance(rank, guess) * (0.75* base + 0.25 * base * LUCKY_BONUS) 
+                expect(ev).toBeCloseTo(1); // provjera očekivane vrijednosti
+            }
+                        
         }
-    });
-})
+    })
+    
+    it("WinMultiplier: sretna boja daje x1.5, ostale osnovni multiplier", () => {
+        // napraviti kartu ručno {rank: 5, suit "♥"}
+        const base = guessMultiplier(5, 'higher')
+        const sretnaKarta = {rank: 9, suit: "♥"} as const;
+        const normalnaKarta = {rank: 9, suit: "♠"} as const;
 
-describe("cashoutAmount", () => {
-    it("isplata ovisi o streaku", () => {
-        expect(cashoutAmount(10, 2, 0)).toBe(19.40);
-        expect(cashoutAmount(10, 2, 5)).toBe(19.60);
-        expect(cashoutAmount(10, 2, 10)).toBe(19.80);
-    });
+        expect(winMultiplier(5, "higher", sretnaKarta, "♥" )).toBeCloseTo(base*LUCKY_BONUS);
+    
+        expect(winMultiplier(5, 'higher', normalnaKarta, '♥')).toBeCloseTo(base);
+})
+    describe("cashoutAmount", () => {
+        it("Fiksni RTP od 99%", () => {
+            // CashoutAmount(10,2) mora biti 19.8
+            expect(cashoutAmount(10,2)).toBe(19.8)
+        })
+    })
 })
