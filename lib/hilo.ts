@@ -82,6 +82,9 @@ export function cashoutAmount(bet: number, multiplier: number): number {
   return Math.round(bet * multiplier * RTP * 100) / 100;
 }
 
-export function isRed(card: Card): boolean {
-  return card.suit === "♥" || card.suit === "♦";
+export function isRedSuit(suit: Suit): boolean {
+  return suit === "♥" || suit === "♦";
+}
+export function isRed(card: Card): boolean{
+  return isRedSuit(card.suit)
 }

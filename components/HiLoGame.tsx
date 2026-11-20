@@ -15,7 +15,9 @@ import {
   drawSuit,
   tierStreak,
   winChance,
-  winMultiplier
+  winMultiplier,
+  LUCKY_BONUS,
+  isRedSuit
 } from "@/lib/hilo";
 
 const START_BALANCE = 5000;
@@ -113,7 +115,6 @@ function Game() {
   const betValid = Number.isFinite(bet) && bet > 0 && bet <= state.balance;
   const correctGuesses = countWins(state.history);
   const tier = playing ? tierStreak(correctGuesses):null;
-  const rtpPercent = Math.round((correctGuesses) * 100);
   const potentialPayout =
     state.multiplier > 1 ? cashoutAmount(state.bet, state.multiplier) : state.bet;
 
@@ -139,6 +140,7 @@ function Game() {
             arrow="▲"
             chance={winChance(rank, "higher")}
             multiplier={guessMultiplier(rank, "higher")}
+            luckySuit={state.luckySuit}
             disabled={!playing}
             onClick={() => dispatch({ type: "guess", guess: "higher" })}
           />
@@ -147,19 +149,23 @@ function Game() {
             arrow="▼"
             chance={winChance(rank, "lower")}
             multiplier={guessMultiplier(rank, "lower")}
+            luckySuit={state.luckySuit}
             disabled={!playing}
             onClick={() => dispatch({ type: "guess", guess: "lower" })}
           />
         </div>
       </section>
 
-      {tier && (
-      <div className={`streak ${tier}`}>
-        🔥 {correctGuesses} u nizu
-        {tier !== "warm" && ` · RTP ${rtpPercent} %`}
-      </div>
-      )}
-
+    {playing && (
+  <div className="badges">
+    <div className="lucky-badge">
+      🍀 Sretna boja:{" "}
+      <span className={isRedSuit(state.luckySuit) ? "red" : ""}>{state.luckySuit}</span>
+      {" "}×{LUCKY_BONUS}
+    </div>
+    {tier && <div className={`streak ${tier}`}>🔥 {correctGuesses} u nizu</div>}
+  </div>
+)}
       <section className="stats">
         <Stat label="multiplier" value={`${state.multiplier.toFixed(2)}×`} />
         <Stat label="točnih" value={String(correctGuesses)} />
@@ -210,7 +216,7 @@ function Game() {
 
       <section className="history">
         {state.history.map((h, i) => (
-          <div key={i} className={`chip ${h.won === false ? "lost" : ""} ${h.won ? "won" : ""}`}>
+                    <div key={i} className={`chip ${h.won === false ? "lost" : ""} ${h.won ? "won" : ""} ${h.lucky ? "lucky" : ""}`}>
             {h.guess && <span className="chip-guess">{h.guess === "higher" ? "▲" : "▼"}</span>}
             <CardView card={h.card} />
           </div>
@@ -234,15 +240,21 @@ function GuessButton(props: {
   arrow: string;
   chance: number;
   multiplier: number;
+  luckySuit: Suit,
   disabled: boolean;
   onClick: () => void;
 }) {
-  return (
+return (
     <button className="guess" disabled={props.disabled} onClick={props.onClick}>
       <span className="arrow">{props.arrow}</span>
       <span>{props.label}</span>
       <small>
         {(props.chance * 100).toFixed(1)}% · {props.multiplier.toFixed(2)}×
+        {!props.disabled && (
+          <span className="lucky-mult">
+            {" "}· {props.luckySuit} {(props.multiplier * LUCKY_BONUS).toFixed(2)}×
+          </span>
+        )}
       </small>
     </button>
   );
